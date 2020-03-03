@@ -7,7 +7,7 @@ template <typename T>
 class IArray
 {
 public:
-    virtual void add(const T value) = 0;
+    virtual void add(const T value, size_t _index) = 0;
 
     //virtual Iter begin() = 0;
     //virtual Iter end() = 0;

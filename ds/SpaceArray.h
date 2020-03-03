@@ -21,7 +21,7 @@ public:
         m_elements_count[0] = 0;
     }
 
-    virtual void add(const T value)
+    virtual void add(const T value, size_t _index)
     {
         if (m_elements_count[m_arrays_count - 1] == m_single_array_size)
         {

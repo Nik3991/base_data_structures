@@ -2,7 +2,10 @@
 #define SINGLEARRAY_H
 
 #include <memory>
+#include <iostream>
 #include "IArray.h"
+
+using namespace std;
 
 template <typename T>
 class SingleArray : public IArray<T>
@@ -41,16 +44,17 @@ public:
         return iterator<T>(m_data_ptr + m_size);
     }
 
-    void add(const T value)
+    void add(const T value, size_t _index)
     {
-        ++m_size;
-        T* tmp_ptr = new T[m_size];
-        memcpy(tmp_ptr, m_data_ptr, (m_size - 1) * sizeof (T));
+        T* tmp_ptr = new T[m_size + 1];
+        memcpy(tmp_ptr, m_data_ptr, _index * sizeof (T));
+        memcpy(tmp_ptr + _index + 1, m_data_ptr + _index, (m_size - _index) * sizeof (T));
 
         delete[] m_data_ptr;
         m_data_ptr = tmp_ptr;
 
-        m_data_ptr[m_size - 1] = std::move(value);
+        m_data_ptr[_index] = std::move(value);
+        ++m_size;
     }
 
     T& operator[](size_t _index)
@@ -77,6 +81,16 @@ public:
     size_t size() const
     {
         return m_size;
+    }
+
+    void print()
+    {
+        cout << "array: ";
+        for (int ix = 0; ix < m_size; ++ix)
+        {
+            cout << m_data_ptr[ix] << " ";
+        }
+        cout << endl;
     }
 
     ~SingleArray()

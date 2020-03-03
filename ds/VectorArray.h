@@ -46,7 +46,7 @@ public:
         return iterator<T>(m_data_ptr + m_size);
     }
 
-    void add(const T value)
+    void add(const T value, size_t _index)
     {
         if (m_size == m_capacity)
         {
@@ -57,7 +57,8 @@ public:
             delete [] m_data_ptr;
             m_data_ptr = new_data_ptr;
         }
-        m_data_ptr[m_size] = std::move(value);
+        memcpy(m_data_ptr + _index + 1, m_data_ptr + _index,  (m_size - _index) * sizeof (T));
+        m_data_ptr[_index] = std::move(value);
         ++m_size;
     }
 

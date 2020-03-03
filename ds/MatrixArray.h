@@ -46,10 +46,11 @@ public:
         m_data_ptr[0] = new T [_capacity];
     }
 
-    void add(const T value)
+    void add(const T _value, size_t _index)
     {
         if (m_size == m_full_capacity)
         {
+            // create additional array if matrix vector is full
             size_t new_data_size = (m_full_capacity / m_capacity) + 1;
             T** tmp_data_ptr = new T*[new_data_size];
             memcpy(tmp_data_ptr, m_data_ptr, new_data_size * sizeof (T*));
@@ -57,9 +58,48 @@ public:
             delete [] m_data_ptr;
             m_data_ptr = tmp_data_ptr;
             m_full_capacity += m_capacity;
+            // - - - - - - - - - - - - - - - - - - - - - - - -
         }
-        m_data_ptr [m_size / m_capacity]
-                   [m_size % m_capacity] = std::move(value);
+
+        int ix_of_last_array   = m_size / m_capacity;
+        int ix_array_to_insert = _index / m_capacity;
+
+        if (ix_of_last_array != ix_array_to_insert)
+        {
+            // move elements if new element should be inserted in the middle of the matrix
+            T*     destination_ptr = m_data_ptr[ix_of_last_array] + 1;
+            T*     source_ptr      = m_data_ptr[ix_of_last_array];
+            size_t count_of_bytes  = (m_size % m_capacity) * sizeof(T);
+
+            memcpy(destination_ptr, source_ptr, count_of_bytes);
+
+            for (int ix = ix_of_last_array - 1; ix >= ix_array_to_insert; --ix)
+            {
+                m_data_ptr[ix + 1][0] = m_data_ptr[ix][m_capacity - 1];
+
+                if (ix > ix_array_to_insert)
+                {
+                    T*     destination_ptr = m_data_ptr[ix] + 1;
+                    T*     source_ptr      = m_data_ptr[ix];
+                    size_t count_of_bytes  = (m_capacity - 1) * sizeof(T);
+
+                    memcpy(destination_ptr, source_ptr, count_of_bytes);
+                }
+            }
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        }
+
+        // move elements in destination array
+        _index %= m_capacity;
+
+        T*     destination_ptr = m_data_ptr[ix_array_to_insert] + _index + 1;
+        T*     source_ptr      = m_data_ptr[ix_array_to_insert] + _index;
+        size_t count_of_bytes  = (m_capacity - _index - 1) * sizeof (T);
+
+        memcpy(destination_ptr, source_ptr, count_of_bytes);
+        // - - - - - - - - - - - - - - - - -
+
+        m_data_ptr [ix_array_to_insert] [_index] = std::move(_value);
         ++m_size;
     }
 
@@ -107,9 +147,7 @@ public:
         size_t new_last_index = (m_size - 1) / m_capacity;
         if (new_last_index < last_index)
         {
-            // last array in matrix now empty
-            // and should be removed
-
+            // last array in matrix now empty and should be removed
             T** new_data_ptr = new T*[last_index];
             memcpy(new_data_ptr, m_data_ptr, last_index * sizeof (T*));
 
@@ -118,6 +156,7 @@ public:
             m_data_ptr = new_data_ptr;
 
             m_full_capacity -= m_capacity;
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
         }
     }
 
@@ -132,16 +171,15 @@ public:
         size_t count = m_full_capacity / m_capacity;
         for (size_t ix = 0; ix < count; ++ix)
         {
-            cout << " array " << ix << ": ";
+            cout << "array " << ix << ": ";
             for (size_t iy = 0; iy < m_capacity; ++iy)
             {
-                 cout << m_data_ptr[ix][iy] << " ";
-                ++current_index;
-
                 if (current_index == m_size)
                 {
                     break;
                 }
+                 cout << m_data_ptr[ix][iy] << " ";
+                ++current_index;
             }
             cout << endl;
         }
