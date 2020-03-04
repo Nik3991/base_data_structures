@@ -23,14 +23,31 @@ public:
 
     virtual void add(const T value, size_t _index)
     {
-        if (m_elements_count[m_arrays_count - 1] == m_single_array_size)
+        size_t array_index, position_to_add;
+        tie(array_index, position_to_add) = get_position(_index);
+
+        bool array_with_free_position_found = false;
+        size_t ix_of_array_with_free_position = array_index;
+        for (;ix_of_array_with_free_position < m_arrays_count; ++ix_of_array_with_free_position)
         {
+            if (m_elements_count[ix_of_array_with_free_position] < m_single_array_size)
+            {
+                array_with_free_position_found = true;
+                break;
+            }
+        }
+
+        if ((array_index == m_arrays_count) || !array_with_free_position_found)
+        {
+            // space array is full - - - - - - - - - - - - - - - - - -
             size_t* tmp_last_indexes = new size_t[m_arrays_count + 1];
             memcpy(tmp_last_indexes, m_elements_count, m_arrays_count * sizeof(size_t));
+
 
             tmp_last_indexes[m_arrays_count] = 0;
             delete [] m_elements_count;
             m_elements_count = tmp_last_indexes;
+
 
             T** tmp_data_array = new T*[m_arrays_count + 1];
             memcpy(tmp_data_array, m_data_ptr, m_arrays_count * sizeof(T*));
@@ -39,9 +56,33 @@ public:
             delete [] m_data_ptr;
             m_data_ptr = tmp_data_array;
             ++m_arrays_count;
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         }
-        m_data_ptr[m_arrays_count - 1][m_elements_count[m_arrays_count - 1]] = std::move(value);
-        ++m_elements_count[m_arrays_count - 1];
+
+        bool elements_should_be_moved = (ix_of_array_with_free_position != array_index);
+        if (elements_should_be_moved)
+        {
+            for (size_t iy = ix_of_array_with_free_position; iy > array_index; --iy)
+            {
+                T*     destination_ptr = m_data_ptr[iy] + 1;
+                T*     source_ptr      = m_data_ptr[iy];
+
+                size_t shift           = iy == ix_of_array_with_free_position ? 0 : 1;
+                size_t count_of_bytes  = (m_elements_count[iy] - shift) * sizeof (T);
+
+                memcpy(destination_ptr, source_ptr, count_of_bytes);
+                m_data_ptr[iy][0] = m_data_ptr[iy - 1][m_elements_count[iy - 1] - 1];
+            }
+        }
+
+        T* destination_ptr    = m_data_ptr[array_index] + position_to_add + 1;
+        T* source_ptr         = m_data_ptr[array_index] + position_to_add;
+        size_t count_of_bytes = (m_elements_count[array_index] - position_to_add - elements_should_be_moved) * sizeof (T);
+
+        memcpy(destination_ptr, source_ptr, count_of_bytes);
+        m_data_ptr[array_index][position_to_add] = std::move(value);
+
+        ++m_elements_count[ix_of_array_with_free_position];
         ++m_full_size;
     }
 
@@ -128,9 +169,15 @@ public:
         for (size_t ix = 0; ix < m_arrays_count; ++ix)
         {
             cout << "array " << ix << ": ";
-            for (size_t iy = 0; iy < m_elements_count[ix]; ++iy)
+            for (size_t iy = 0; iy < m_single_array_size; ++iy)
             {
-                cout << m_data_ptr[ix][iy] << " ";
+                if (iy < m_elements_count[ix])
+                {
+                    cout << m_data_ptr[ix][iy] << " ";
+                } else
+                {
+                    cout << ". ";
+                }
             }
             cout << endl;
         }
@@ -152,7 +199,7 @@ private:
         size_t array_index = 0;
         for (; array_index < m_arrays_count; ++array_index)
         {
-            if ((size + m_elements_count[array_index]) > _index)
+            if ((size + m_elements_count[array_index]) >= _index)
             {
                 break;
             } else
@@ -161,11 +208,11 @@ private:
             }
         }
 
-        size_t position = _index - size;
+        size_t position = (_index - size) % m_single_array_size;
         return make_tuple(array_index, position);
     }
 
-    T**     m_data_ptr     {nullptr};
+    T**     m_data_ptr       {nullptr};
     size_t* m_elements_count {nullptr};
     size_t  m_arrays_count;
     size_t  m_full_size;
