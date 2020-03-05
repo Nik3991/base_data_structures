@@ -4,6 +4,8 @@
 #include <vector>
 #include <stack>
 #include <queue>
+#include <fstream>
+#include <thread>
 
 using namespace std;
 using namespace std::chrono;
@@ -11,447 +13,315 @@ using namespace std::chrono;
 #include "SingleArray.h"
 #include "VectorArray.h"
 #include "MatrixArray.h"
-//#include "SpaceArray.h"
+#include "SpaceArray.h"
 #include "Stack.h"
 #include "Queue.h"
 #include "PriorityQueue.h"
 
+template <typename Collection, typename Type, typename ...Args>
+void test_get(ofstream& _output, int _items_count, int _get_items, Args ...args)
+{
+    Collection collection(args...);
+    for (int ix = 0; ix < _items_count; ++ix)
+    {
+        collection.add(Type(ix), collection.size());
+    }
+
+    // - - - - - - - - - - - - - - - - - -
+
+    auto start  = high_resolution_clock::now();
+    for (int ix = 0; ix < _get_items; ++ix)
+    {
+        collection.get(0);
+    }
+    auto end = high_resolution_clock::now();
+    auto time = duration_cast<milliseconds>(end - start);
+    _output << " get from (0);            elements count = " << _get_items << "   result time = " << time.count() << " ms" << endl;
+
+    // - - - - - - - - - - - - - - - - - -
+
+    start  = high_resolution_clock::now();
+    for (int ix = 0; ix < _get_items; ++ix)
+    {
+        collection.get(collection.size() / 2);
+    }
+    end = high_resolution_clock::now();
+    time = duration_cast<milliseconds>(end - start);
+    _output << " get from (c.size() / 2); elements count = " << _get_items << "   result time = " << time.count() << " ms" << endl;
+
+    // - - - - - - - - - - - - - - - - - -
+
+    start  = high_resolution_clock::now();
+    for (int ix = 0; ix < _get_items; ++ix)
+    {
+        collection.get(collection.size());
+    }
+    end = high_resolution_clock::now();
+    time = duration_cast<milliseconds>(end - start);
+    _output << " get from (c.size());     elements count = " << _get_items << "   result time = " << time.count() << " ms" << endl;
+}
+
+template <typename Collection, typename Type, typename ...Args>
+void test_remove(ofstream& _output, int _items_count, int _remove_items, Args ...args)
+{
+    Collection collection(args...);
+    // - - - - - - - - - - - - - - - - - - - - -
+    for (int ix = 0; ix < _items_count; ++ix)
+    {
+        collection.add(Type(ix), collection.size());
+    }
+    // - - - - - - - - - - - - - - - - - - - - -
+
+    auto start  = high_resolution_clock::now();
+    for (int ix = 0; ix < _remove_items; ++ix)
+    {
+        collection.remove(0);
+    }
+    auto end = high_resolution_clock::now();
+    auto time = duration_cast<milliseconds>(end - start);
+    _output << " remove from (0);              elements count = " << _remove_items << "    result time = " << time.count() << " ms" << endl;
+
+    // - - - - - - - - - - - - - - - - - - - - -
+    for (int ix = 0; ix < _remove_items; ++ix)
+    {
+        collection.add(Type(ix), collection.size());
+    }
+    // - - - - - - - - - - - - - - - - - - - - -
+
+    start  = high_resolution_clock::now();
+    for (int ix = 0; ix < _remove_items; ++ix)
+    {
+        collection.remove(collection.size() / 2);
+    }
+    end = high_resolution_clock::now();
+    time = duration_cast<milliseconds>(end - start);
+    _output << " remove from (c.size() / 2);   elements count = " << _remove_items << "    result time = " << time.count() << " ms" << endl;
+
+    // - - - - - - - - - - - - - - - - - - - - -
+    for (int ix = 0; ix < _remove_items; ++ix)
+    {
+        collection.add(Type(ix), collection.size());
+    }
+    // - - - - - - - - - - - - - - - - - - - - -
+
+    start  = high_resolution_clock::now();
+    for (int ix = 0; ix < _remove_items; ++ix)
+    {
+        collection.remove(collection.size());
+    }
+    end = high_resolution_clock::now();
+    time = duration_cast<milliseconds>(end - start);
+    _output << " remove from (c.size());       elements count = " << _remove_items << "    result time = " << time.count() << " ms" << endl;
+}
+
+template <typename Collection, typename Type, typename ...Args>
+void test_add(ofstream& _output, size_t _items_count, Args ...args)
+{
+    {
+        Collection collection(args...);
+        auto start  = high_resolution_clock::now();
+        for (int ix = 0; ix < _items_count; ++ix)
+        {
+            collection.add(Type(ix), 0);
+        }
+        auto end = high_resolution_clock::now();
+        auto time = duration_cast<milliseconds>(end - start);
+
+        _output << " add to (0);            elements = " << _items_count << "   result time = " << time.count() << " ms" << endl;
+    }
+
+    {
+        Collection collection(args...);
+        auto start  = high_resolution_clock::now();
+        for (int ix = 0; ix < _items_count; ++ix)
+        {
+            collection.add(Type(ix), collection.size() / 2);
+        }
+        auto end = high_resolution_clock::now();
+        auto time = duration_cast<milliseconds>(end - start);
+
+        _output << " add to (c.size() / 2); elements = " << _items_count << "   result time = " << time.count() << " ms" << endl;
+    }
+
+    {
+        Collection collection(args...);
+        auto start  = high_resolution_clock::now();
+        for (int ix = 0; ix < _items_count; ++ix)
+        {
+            collection.add(Type(ix), collection.size());
+        }
+        auto end = high_resolution_clock::now();
+        auto time = duration_cast<milliseconds>(end - start);
+
+        _output << " add to (c.size());     elements = " << _items_count << "   result time = " << time.count() << " ms" << endl;
+    }
+}
+
+template <typename Collection, typename Type, typename ...Args>
+void test(const char* _message, const char * _file, int _items_count, int _elements_to_remove, int _get_times, Args ...args)
+{
+    ofstream output;
+    output.open(_file);
+
+    if (output)
+    {
+        cout << "TEST OF " << _message << " START WORK" << endl;
+        output << " - - - - - - - START TEST OF " << _message << " - - - - - - -" << endl << endl;
+        test_add<Collection, Type>(output, _items_count, args...);
+        output << endl;
+        test_get<Collection, Type>(output, _items_count, _get_times, args...);
+        output << endl;
+        test_remove<Collection, Type>(output, _items_count, _elements_to_remove, args...);
+        output << endl;
+        output << " - - - - - - - - END TEST OF " << _message << " - - - - - - -" << endl << endl;
+
+        output.flush();
+        output.close();
+        cout << "TEST OF " << _message << " END WORK" << endl;
+    } else
+    {
+        cout << " can`t open file to write test result for" << _message << endl;
+    }
+}
+
 template <typename T>
-void print_array(T & _arr)
+struct StackWrapper : public Stack<T>
 {
-    cout << endl;
-    for (size_t ix = 0; ix < _arr.size(); ++ix)
+    void add(T _value)
     {
-        cout << "element " << ix << " = " << _arr.get(ix) << endl;
+        this->push(_value);
     }
-}
 
-//void SA()
-//{
-//    SpaceArray<int> sa(3);
+    T get(size_t _index)
+    {
+        (void) _index;
+        return this->pop();
+    }
 
-//    for (int ix = 0; ix < 10; ++ ix)
-//    {
-//        sa.add(ix);
-//    }
+    void remove(size_t _index) {(void)_index;}
+};
 
-//    sa.print();
 
-//    int select;
-//    cin >> select;
-//    while (select)
-//    {
-//        switch (select)
-//        {
-//            case 1:
-//            {
-//                sa.print();
-//            } break;
-
-//            case 2:
-//            {
-//                cin >> select;
-//                sa.add(select);
-//                sa.print();
-//            } break;
-
-//            case 3:
-//            {
-//                size_t index;
-//                cin >> index;
-//                sa.remove(index);
-//                sa.print();
-//            } break;
-
-//            default: break;
-//        }
-//        cin >> select;
-//        cout << endl;
-//    }
-//}
-
-//void MA()
-//{
-//    MatrixArray<int> matrix(10);
-
-//    print_array<MatrixArray<int>>(matrix);
-
-//    for (int ix = 0; ix < 23; ++ix)
-//    {
-//        matrix.add(ix);
-//    }
-
-//    print_array<MatrixArray<int>>(matrix);
-
-//    for (size_t ix = 0; ix < 5; ++ix)
-//    {
-//        matrix.remove(matrix.size() - 1);
-//    }
-
-//    print_array<MatrixArray<int>>(matrix);
-
-//    for (size_t ix = 0; ix < 5; ++ix)
-//    {
-//        matrix.remove(0);
-//    }
-
-//    print_array<MatrixArray<int>>(matrix);
-
-//    for (size_t ix = 0; ix < 3; ++ix)
-//    {
-//        matrix.remove(7);
-//    }
-
-//    print_array<MatrixArray<int>>(matrix);
-//}
-
-//void Q()
-//{
-//    Queue<int> q;
-
-//    for (int ix = 0; ix < 10; ++ix)
-//    {
-//        q.enqueue(ix);
-//    }
-
-//    while (q.size())
-//    {
-//        cout << "element:" << q.size() << " " << q.dequeue() << endl;
-//    }
-
-//    //q.dequeue();
-//}
-
-//void S()
-//{
-//    Stack<int> s;
-
-//    for(int ix = 0; ix < 10; ++ix)
-//    {
-//        s.push(ix);
-//    }
-
-//    while (s.size())
-//    {
-//        cout << "element:" << s.size() << " " << s.pop() << endl;
-//    }
-
-//    //s.pop();
-//}
-
-//void PQ()
-//{
-//    PriorityQueue<int, int> pq;
-
-//    for (int ix = 0; ix < 10; ++ix)
-//    {
-//        int priority = rand() % 10;
-//        //cout << " ix = " << ix << " priority = " << priority << endl;
-//        pq.enqueue(ix, priority);
-//    }
-
-//    pq.print();
-
-//    int select ;
-
-//    cin >> select;
-//    while (select != 0)
-//    {
-//        if (select == 2)
-//        {
-//            for (int ix = 0; ix < 10; ++ix)
-//            {
-//                int priority = rand() % 10;
-//                pq.enqueue(ix, priority);
-//            }
-//            pq.print();
-//            cout << endl;
-//        } else
-//        {
-//            cout << "element = " << pq.dequeue() << endl << endl;
-//            pq.print();
-//            cout << endl;
-//        }
-//        cin >> select;
-//    }
-//}
-
-//template <typename Collection, typename Type>
-//milliseconds test_get(Collection& _c, size_t _index)
-//{
-//    int tests_cout = 100;
-
-//    auto start = high_resolution_clock::now();
-//    for (int ix = 0; ix < tests_cout; ++ix)
-//    {
-//        Type t = _c.get(_index);
-//        ++t;
-//        (void)t;
-//    }
-//    auto end = high_resolution_clock::now();
-//    auto time = duration_cast<milliseconds>(end - start);
-//    return time;
-//}
-
-//template <typename Collection, typename Type>
-//void test(Collection& c, int _items_count, const char* _message)
-//{
-//    auto start  = high_resolution_clock::now();
-//    for (int ix = 0; ix < _items_count; ++ix)
-//    {
-//        c.add(Type(ix));
-//    }
-
-//    auto end = high_resolution_clock::now();
-//    auto time = duration_cast<milliseconds>(end - start);
-
-//    cout << _message << " add " << _items_count << " elements = " << time.count() << " ms" << endl;
-
-//    time = test_get<Collection, Type>(c, 0);
-//    cout << _message << " get from start     = " << time.count() << " ms" << endl;
-
-//    time = test_get<Collection, Type>(c, c.size() / 2);
-//    cout << _message << " get from middle    = " << time.count() << " ms" << endl;
-
-//    time = test_get<Collection, Type>(c, c.size() - 1);
-//    cout << _message << " get from end       = " << time.count() << " ms" << endl;
-
-
-//    int elements_to_remove = 100;
-//    start = high_resolution_clock::now();
-//    for (int ix = 0; ix < elements_to_remove; ++ix)
-//    {
-//        c.remove(0);
-//    }
-//    end = high_resolution_clock::now();
-//    time = duration_cast<milliseconds>(end - start);
-//    cout << _message << " remove from start  = " << time.count() << " ms" << endl;
-
-//    for (int ix = 0; ix < elements_to_remove; ++ix)
-//    {
-//        c.add(ix);
-//    }
-
-//    start = high_resolution_clock::now();
-//    for (int ix = 0; ix < elements_to_remove; ++ix)
-//    {
-//        c.remove(c.size() / 2);
-//    }
-//    end = high_resolution_clock::now();
-//    time = duration_cast<milliseconds>(end - start);
-//    cout << _message << " remove from middle = " << time.count() << " ms" << endl;
-
-//    for (int ix = 0; ix < elements_to_remove; ++ix)
-//    {
-//        c.add(ix);
-//    }
-
-//    start = high_resolution_clock::now();
-//    for (int ix = 0; ix < elements_to_remove; ++ix)
-//    {
-//        c.remove(c.size() - 1);
-//    }
-//    end = high_resolution_clock::now();
-//    time = duration_cast<milliseconds>(end - start);
-//    cout << _message << " remove from end    = " << time.count() << " ms" << endl << endl;
-//}
-
-//template <typename T>
-//struct StackWrapper : public Stack<T>
-//{
-//    void add(T _value)
-//    {
-//        this->push(_value);
-//    }
-
-//    T get(size_t _index)
-//    {
-//        (void) _index;
-//        return this->pop();
-//    }
-
-//    void remove(size_t _index) {(void)_index;}
-//};
-
-
-//template <typename T>
-//struct QueueWrapper : public Queue<T>
-//{
-//    void add(T _value)
-//    {
-//        this->enqueue(_value);
-//    }
-
-//    T get(size_t _index)
-//    {
-//        (void) _index;
-//        return this->dequeue();
-//    }
-
-//    void remove(size_t _index) {(void)_index;}
-//};
-
-
-//template <typename T, typename P>
-//struct PriorityQueueWrapper : public PriorityQueue<T, P>
-//{
-//    void add(T _value)
-//    {
-//        P priority(0);
-//        this->enqueue(_value, priority);
-//    }
-
-//    T get(size_t _index)
-//    {
-//        (void) _index;
-//        return this->dequeue();
-//    }
-
-//    void remove(size_t _index) {(void)_index;}
-//};
-
-
-//template <typename T>
-//struct StdVectorWrapper : public vector<T>
-//{
-//    void add(T _value)
-//    {
-//        this->push_back(_value);
-//    }
-
-//    T get(size_t _index)
-//    {
-//        return vector<T>::at(_index);
-//    }
-
-//    void remove(size_t _index)
-//    {
-//        vector<T>::erase(vector<T>::begin() + _index);
-//    }
-//};
-
-//template <typename T>
-//struct StdQueueWrapper : public queue<T>
-//{
-//    void add(T _value)
-//    {
-//        queue<T>::push(_value);
-//    }
-
-//    T get(size_t _index)
-//    {
-//        (void)_index;
-//        T result = queue<T>::front();
-//        queue<T>::pop();
-//        return result;
-//    }
-
-//    void remove(size_t _index) {(void)_index;}
-//};
-
-//template <typename T>
-//struct StdStackWrapper : public stack<T>
-//{
-//    void add(T _value)
-//    {
-//        stack<T>::push(_value);
-//    }
-
-//    T get(size_t _index)
-//    {
-//        (void)_index;
-//        T result = stack<T>::top();
-//        stack<T>::pop();
-//        return result;
-//    }
-
-//    void remove(size_t _index) {(void)_index;}
-//};
-
-//int main ()
-//{
-//    VectorArray<int> va(10, 1.0);
-//    for (int ix = 0; ix < 10; ++ix)
-//    {
-//        va.add(ix, 0);
-//    }
-//    va.print();
-//    va.add(111, 5);
-//    va.print();
-
-//    SingleArray<int> sa;
-//    for (int ix = 0; ix < 10; ++ix)
-//    {
-//        sa.add(ix,0);
-//    }
-//    sa.print();
-//    sa.add(111, 5);
-//    sa.print();
-
-//    for (int ix = 11; ix < 20; ++ix)
-//    {
-//        sa.add(ix,sa.size());
-//    }
-//    sa.print();
-//}
-
-int main ()
+template <typename T>
+struct QueueWrapper : public Queue<T>
 {
-    MatrixArray<int> ma(10);
-
-    for (int ix = 0; ix < 20; ++ix)
+    void add(T _value)
     {
-        ma.add(ix, 0);
-        ma.print();
-        cout << endl;
+        this->enqueue(_value);
     }
 
-    cout << endl << endl << endl;
-
-    for (int ix = 100; ix < 110; ++ix)
+    T get(size_t _index)
     {
-        ma.add(ix, ma.size());
-        ma.print();
-        cout << endl;
+        (void) _index;
+        return this->dequeue();
     }
 
-    for (int ix = 100; ix < 110; ++ix)
+    void remove(size_t _index) {(void)_index;}
+};
+
+
+template <typename T, typename P>
+struct PriorityQueueWrapper : public PriorityQueue<T, P>
+{
+    void add(T _value)
     {
-        ma.add(77, 20);
-        ma.print();
-        cout << endl;
+        P priority(0);
+        this->enqueue(_value, priority);
     }
 
-    while (ma.size()) {
-        ma.remove(0);
-        ma.print();
-        cout << endl;
+    T get(size_t _index)
+    {
+        (void) _index;
+        return this->dequeue();
     }
 
-    //for (int ix = 15; ix < 25; ++ix)
-    //{
-    //    ma.add(ix, 5);
-    //    ma.print();
-    //    cout << endl;
-    //}
-}
+    void remove(size_t _index) {(void)_index;}
+};
 
-//int main()
-//{
-//    int count_of_elements = 100000000;
 
-//    //---------------------------
-//    {
-//        {
-//            VectorArray<int> vector_10_02(10, 0.2);
-//            test<VectorArray<int>, int>(vector_10_02,  count_of_elements, static_cast<const char*>("VectorArray<int>(10, 0.2)"));
-//        }
+template <typename T>
+struct StdVectorWrapper : public vector<T>
+{
+    void add(T _value)
+    {
+        this->push_back(_value);
+    }
+
+    T get(size_t _index)
+    {
+        return vector<T>::at(_index);
+    }
+
+    void remove(size_t _index)
+    {
+        vector<T>::erase(vector<T>::begin() + _index);
+    }
+};
+
+template <typename T>
+struct StdQueueWrapper : public queue<T>
+{
+    void add(T _value)
+    {
+        queue<T>::push(_value);
+    }
+
+    T get(size_t _index)
+    {
+        (void)_index;
+        T result = queue<T>::front();
+        queue<T>::pop();
+        return result;
+    }
+
+    void remove(size_t _index) {(void)_index;}
+};
+
+template <typename T>
+struct StdStackWrapper : public stack<T>
+{
+    void add(T _value)
+    {
+        stack<T>::push(_value);
+    }
+
+    T get(size_t _index)
+    {
+        (void)_index;
+        T result = stack<T>::top();
+        stack<T>::pop();
+        return result;
+    }
+
+    void remove(size_t _index) {(void)_index;}
+};
+
+
+int main()
+{
+    int count_of_elements = 100000;
+
+    //void test(const char* _message, int _items_count, int _elements_to_remove, int _get_times, Args ...args)
+
+    //---------------------------
+    {
+        {
+            //VectorArray<int> vector_10_02(10, 0.2);
+            thread t1(test<VectorArray<int>, int, int, double>, static_cast<const char*>("VectorArray<int>(10, 0.2)"),
+                                                                static_cast<const char*>("D:/vector_results.txt"),
+                                                                count_of_elements, 10000, 10000, 10, 0.2);
+
+            t1.join();
+            //test<VectorArray<int>, int, int, double>(static_cast<const char*>("VectorArray<int>(10, 0.2)"),
+            //                                         static_cast<const char*>("D:/vector_results.txt"),
+            //                                         count_of_elements, 10000, 10000, 10, 0.2);
+        }
 //        {
 //            VectorArray<int> vector_10_1(10, 1.0);
 //            test<VectorArray<int>, int>(vector_10_1,  count_of_elements, static_cast<const char*>("VectorArray<int>(10, 1.0)"));
 //        }
-//    }
-//    //---------------------------
+    }
+    //---------------------------
 
 
 //    //---------------------------
@@ -539,21 +409,5 @@ int main ()
 //    }
 //    //---------------------------
 
-//    return 0;
-//}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return 0;
+}
