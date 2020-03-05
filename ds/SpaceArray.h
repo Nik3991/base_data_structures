@@ -195,20 +195,18 @@ public:
 private:
     tuple<size_t, size_t> get_position(size_t _index) const
     {
-        size_t size = 0;
-        size_t array_index = 0;
+        size_t array_index = 0, position = 0, size = 0;
         for (; array_index < m_arrays_count; ++array_index)
         {
-            if ((size + m_elements_count[array_index]) >= _index)
+            size_t current_count = size + m_elements_count[array_index];
+            if (current_count >= _index && (_index < m_single_array_size * (array_index + 1)))
             {
                 break;
-            } else
-            {
-                size += m_elements_count[array_index];
             }
+            size += m_elements_count[array_index];
         }
 
-        size_t position = (_index - size) % m_single_array_size;
+        position = _index - size;
         return make_tuple(array_index, position);
     }
 
