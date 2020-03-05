@@ -54,7 +54,7 @@ void test_get(ofstream& _output, int _items_count, int _get_items, Args ...args)
     start  = high_resolution_clock::now();
     for (int ix = 0; ix < _get_items; ++ix)
     {
-        collection.get(collection.size());
+        collection.get(collection.size() - 1);
     }
     end = high_resolution_clock::now();
     time = duration_cast<milliseconds>(end - start);
@@ -107,7 +107,7 @@ void test_remove(ofstream& _output, int _items_count, int _remove_items, Args ..
     start  = high_resolution_clock::now();
     for (int ix = 0; ix < _remove_items; ++ix)
     {
-        collection.remove(collection.size());
+        collection.remove(collection.size() - 1);
     }
     end = high_resolution_clock::now();
     time = duration_cast<milliseconds>(end - start);
@@ -177,7 +177,7 @@ void test(const char* _message, const char * _file, int _items_count, int _eleme
 
         output.flush();
         output.close();
-        cout << "TEST OF " << _message << " END WORK" << endl;
+        cout << "TEST OF " << _message << " END WORK" << endl << endl;
     } else
     {
         cout << " can`t open file to write test result for" << _message << endl;
@@ -242,9 +242,9 @@ struct PriorityQueueWrapper : public PriorityQueue<T, P>
 template <typename T>
 struct StdVectorWrapper : public vector<T>
 {
-    void add(T _value)
+    void add(T _value, size_t _index)
     {
-        this->push_back(_value);
+        this->emplace(this->begin() + _index, _value);
     }
 
     T get(size_t _index)
@@ -296,69 +296,89 @@ struct StdStackWrapper : public stack<T>
     void remove(size_t _index) {(void)_index;}
 };
 
+//int main ()
+//{
+//    //VectorArray<int> va;
+//    //MatrixArray<int> va;
+//    //SingleArray<int> va;
+//    //SpaceArray<int> va;
+
+////    for (int ix = 0; ix < 20; ++ix)
+////    {
+////        va.add(ix, va.size());
+////    }
+////    va.print();
+////    cout << " elements count = " << va.size() << endl;
+
+//    //vector<int> v;
+//    //for (int ix = 0; ix < 10; ++ix)
+//    //{
+//    //    v.emplace(v.begin() + v.size(), ix);
+//    //}
+//    //
+//    //for (int ix = 0; ix < v.size(); ++ix)
+//    //{
+//    //    cout << v[ix] << endl;
+//    //}
+
+//    //cout << va.get(va.size() - 1 ) << endl;
+
+//    //while (va.size())
+//    //{
+//    //    va.remove(0);
+//    //    va.print();
+//    //    cout << endl;
+//    //}
+
+//    //va.print();
+//    //cout << " elements count = " << va.size() << endl;
+
+//    return 0;
+//}
 
 int main()
 {
     int count_of_elements = 100000;
 
-    //void test(const char* _message, int _items_count, int _elements_to_remove, int _get_times, Args ...args)
+    test<VectorArray<int>, int, int, double>(static_cast<const char*>("VectorArray<int>(10, 0.2)"),
+                                             static_cast<const char*>("D:/vector_array_10_02.txt"),
+                                             count_of_elements, 10000, 10000, 10, 0.2);
 
-    //---------------------------
-    {
-        {
-            //VectorArray<int> vector_10_02(10, 0.2);
-            thread t1(test<VectorArray<int>, int, int, double>, static_cast<const char*>("VectorArray<int>(10, 0.2)"),
-                                                                static_cast<const char*>("D:/vector_results.txt"),
-                                                                count_of_elements, 10000, 10000, 10, 0.2);
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-            t1.join();
-            //test<VectorArray<int>, int, int, double>(static_cast<const char*>("VectorArray<int>(10, 0.2)"),
-            //                                         static_cast<const char*>("D:/vector_results.txt"),
-            //                                         count_of_elements, 10000, 10000, 10, 0.2);
-        }
-//        {
-//            VectorArray<int> vector_10_1(10, 1.0);
-//            test<VectorArray<int>, int>(vector_10_1,  count_of_elements, static_cast<const char*>("VectorArray<int>(10, 1.0)"));
-//        }
-    }
-    //---------------------------
+    test<VectorArray<int>, int, int, double>(static_cast<const char*>("VectorArray<int>(10, 1.0)"),
+                                             static_cast<const char*>("D:/vector_array_10_10.txt"),
+                                             count_of_elements, 10000, 10000, 10, 1.0);
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-//    //---------------------------
-//    {
-//        StdVectorWrapper<int> std_vector;
-//        test<StdVectorWrapper<int>, int>(std_vector, count_of_elements, static_cast<const char*>("StdVectorWrapper<int>"));
-//    }
-//    //---------------------------
+    test<StdVectorWrapper<int>, int>(static_cast<const char*>("StdVectorWrapper<int>"),
+                                     static_cast<const char*>("D:/std_vector.txt"),
+                                     count_of_elements, 10000, 10000);
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-//    count_of_elements = 100000;
-//    //---------------------------
-//    {
-//        SingleArray<int> signle_array;
-//        test<SingleArray<int>, int>(signle_array, count_of_elements, static_cast<const char*>("SingleArray<int>"));
-//    }
-//    //---------------------------
+    test<SingleArray<int>, int>(static_cast<const char*>("SingleArray<int>"),
+                                static_cast<const char*>("D:/single_array.txt"),
+                                count_of_elements, 10000, 10000);
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-//    count_of_elements = 100000000;
-//    //---------------------------
-//    {
-//        {
-//            MatrixArray<int> ma_size_100(100);
-//            test<MatrixArray<int>, int>(ma_size_100, count_of_elements, static_cast<const char*>("MatrixArray<int>(100)"));
-//        }
-//        {
-//            MatrixArray<int> ma_size_1000(1000);
-//            test<MatrixArray<int>, int>(ma_size_1000, count_of_elements, static_cast<const char*>("MatrixArray<int>(1000)"));
-//        }
-//        {
-//            MatrixArray<int> ma_size_10000(10000);
-//            test<MatrixArray<int>, int>(ma_size_10000, count_of_elements, static_cast<const char*>("MatrixArray<int>(10000)"));
-//        }
-//    }
-//    //---------------------------
+    test<MatrixArray<int>, int, int>(static_cast<const char*>("MatrixArray<int>(100)"),
+                                     static_cast<const char*>("D:/single_array.txt"),
+                                     count_of_elements, 10000, 10000, 100);
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    test<MatrixArray<int>, int, int>(static_cast<const char*>("MatrixArray<int>(1000)"),
+                                     static_cast<const char*>("D:/single_array.txt"),
+                                     count_of_elements, 10000, 10000, 1000);
+
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    test<MatrixArray<int>, int, int>(static_cast<const char*>("MatrixArray<int>(10000)"),
+                                     static_cast<const char*>("D:/single_array.txt"),
+                                     count_of_elements, 10000, 10000, 10000);
 
 //    //---------------------------
 //    {

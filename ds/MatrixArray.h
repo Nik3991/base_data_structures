@@ -40,7 +40,7 @@ public:
         K** m_ptr         {nullptr};
     };
 
-    MatrixArray(size_t _capacity) : m_capacity(_capacity), m_full_capacity(_capacity)
+    MatrixArray(size_t _capacity = 10) : m_capacity(_capacity), m_full_capacity(_capacity)
     {
         m_data_ptr    = new T*[1];
         m_data_ptr[0] = new T [_capacity];
@@ -174,11 +174,13 @@ public:
             cout << "array " << ix << ": ";
             for (size_t iy = 0; iy < m_capacity; ++iy)
             {
-                if (current_index == m_size)
+                if (current_index < m_size)
                 {
-                    break;
+                    cout << m_data_ptr[ix][iy] << " ";
+                } else
+                {
+                    cout << ". ";
                 }
-                 cout << m_data_ptr[ix][iy] << " ";
                 ++current_index;
             }
             cout << endl;

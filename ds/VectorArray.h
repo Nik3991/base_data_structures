@@ -30,7 +30,7 @@ public:
         K* m_ptr {nullptr};
     };
 
-    VectorArray(size_t _capacity, double _trashhold = 0.5)
+    VectorArray(size_t _capacity = 10, double _trashhold = 0.5)
                : m_trashhold(_trashhold), m_capacity(_capacity)
     {
         m_data_ptr = new T[m_capacity];
@@ -74,7 +74,7 @@ public:
 
     void remove(size_t _index)
     {
-        memcpy(m_data_ptr + _index, m_data_ptr + _index + 1, (m_size - _index) * sizeof (T));
+        memcpy(m_data_ptr + _index, m_data_ptr + _index + 1, (m_size - 1 - _index) * sizeof (T));
         --m_size;
     }
 

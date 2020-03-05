@@ -12,7 +12,7 @@ template <typename T>
 class SpaceArray : public IArray<T>
 {
 public:
-    SpaceArray(const size_t _size) : m_single_array_size(_size), m_full_size(0)
+    SpaceArray(const size_t _size = 10) : m_single_array_size(_size), m_full_size(0)
     {
         m_data_ptr = new T*[1];
         m_data_ptr[0] = new T[m_single_array_size];
