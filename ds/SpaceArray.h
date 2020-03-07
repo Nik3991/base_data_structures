@@ -89,21 +89,42 @@ public:
     virtual T& operator[](size_t _index)
     {
         size_t array_index, position;
-        tie(array_index, position) = get_position(_index);
+        if (_index == m_full_size - 1)
+        {
+            array_index = m_arrays_count - 1;
+            position = m_elements_count[array_index] - 1;
+        } else
+        {
+            tie(array_index, position) = get_position(_index);
+        }
         return m_data_ptr[array_index][position];
     }
 
     virtual T get(size_t _index) const
     {
         size_t array_index, position;
-        tie(array_index, position) = get_position(_index);
+        if (_index == m_full_size - 1)
+        {
+            array_index = m_arrays_count - 1;
+            position = m_elements_count[array_index] - 1;
+        } else
+        {
+            tie(array_index, position) = get_position(_index);
+        }
         return m_data_ptr[array_index][position];
     }
 
     virtual void remove(size_t _index)
     {
         size_t array_index, position_to_remove;
-        tie(array_index, position_to_remove) = get_position(_index);
+        if (_index == m_full_size - 1)
+        {
+            array_index = m_arrays_count - 1;
+            position_to_remove = m_elements_count[array_index] - 1;
+        } else
+        {
+            tie(array_index, position_to_remove) = get_position(_index);
+        }
 
 /*                           position_to_remove
                                   |

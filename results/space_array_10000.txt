@@ -1,0 +1,16 @@
+ - - - - - - - START TEST OF SpaceArray<int>(10000) - - - - - - -
+
+ add to (0);            elements = 1000000   result time = 50865 ms
+ add to (c.size() / 2); elements = 1000000   result time = 25391 ms
+ add to (c.size());     elements = 1000000   result time = 46 ms
+
+ get from (0);            elements count = 100000   result time = 0 ms
+ get from (c.size() / 2); elements count = 100000   result time = 0 ms
+ get from (c.size());     elements count = 100000   result time = 0 ms
+
+ remove from (0);              elements count = 100000    result time = 32 ms
+ remove from (c.size() / 2);   elements count = 100000    result time = 21 ms
+ remove from (c.size());       elements count = 100000    result time = 9 ms
+
+ - - - - - - - - END TEST OF SpaceArray<int>(10000) - - - - - - -
+

@@ -1,0 +1,16 @@
+ - - - - - - - START TEST OF StdQueueWrapper<int> - - - - - - -
+
+ add to (0);            elements = 1000000   result time = 2 ms
+ add to (c.size() / 2); elements = 1000000   result time = 2 ms
+ add to (c.size());     elements = 1000000   result time = 1 ms
+
+ get from (0);            elements count = 100000   result time = 0 ms
+ get from (c.size() / 2); elements count = 100000   result time = 0 ms
+ get from (c.size());     elements count = 100000   result time = 0 ms
+
+ remove from (0);              elements count = 100000    result time = 0 ms
+ remove from (c.size() / 2);   elements count = 100000    result time = 0 ms
+ remove from (c.size());       elements count = 100000    result time = 0 ms
+
+ - - - - - - - - END TEST OF StdQueueWrapper<int> - - - - - - -
+

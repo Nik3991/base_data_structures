@@ -1,0 +1,16 @@
+ - - - - - - - START TEST OF MatrixArray<int>(100) - - - - - - -
+
+ add to (0);            elements = 1000000   result time = 70331 ms
+ add to (c.size() / 2); elements = 1000000   result time = 34704 ms
+ add to (c.size());     elements = 1000000   result time = 31 ms
+
+ get from (0);            elements count = 100000   result time = 0 ms
+ get from (c.size() / 2); elements count = 100000   result time = 0 ms
+ get from (c.size());     elements count = 100000   result time = 0 ms
+
+ remove from (0);              elements count = 100000    result time = 12799 ms
+ remove from (c.size() / 2);   elements count = 100000    result time = 6406 ms
+ remove from (c.size());       elements count = 100000    result time = 4 ms
+
+ - - - - - - - - END TEST OF MatrixArray<int>(100) - - - - - - -
+

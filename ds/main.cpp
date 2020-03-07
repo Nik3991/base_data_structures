@@ -29,10 +29,11 @@ void test_get(ofstream& _output, int _items_count, int _get_items, Args ...args)
 
     // - - - - - - - - - - - - - - - - - -
 
+    volatile Type t;
     auto start  = high_resolution_clock::now();
     for (int ix = 0; ix < _get_items; ++ix)
     {
-        collection.get(0);
+        t = ++collection[0];
     }
     auto end = high_resolution_clock::now();
     auto time = duration_cast<milliseconds>(end - start);
@@ -43,7 +44,7 @@ void test_get(ofstream& _output, int _items_count, int _get_items, Args ...args)
     start  = high_resolution_clock::now();
     for (int ix = 0; ix < _get_items; ++ix)
     {
-        collection.get(collection.size() / 2);
+        t = ++collection[collection.size() / 2];
     }
     end = high_resolution_clock::now();
     time = duration_cast<milliseconds>(end - start);
@@ -54,7 +55,7 @@ void test_get(ofstream& _output, int _items_count, int _get_items, Args ...args)
     start  = high_resolution_clock::now();
     for (int ix = 0; ix < _get_items; ++ix)
     {
-        collection.get(collection.size() - 1);
+        t = ++collection[collection.size() - 1];
     }
     end = high_resolution_clock::now();
     time = duration_cast<milliseconds>(end - start);
@@ -187,9 +188,17 @@ void test(const char* _message, const char * _file, int _items_count, int _eleme
 template <typename T>
 struct StackWrapper : public Stack<T>
 {
-    void add(T _value)
+    void add(T _value, size_t _index)
     {
+        (void)_index;
         this->push(_value);
+    }
+
+    T& operator[](size_t _index)
+    {
+        (void)_index;
+        static int i = this->pop();
+        return i;
     }
 
     T get(size_t _index)
@@ -205,9 +214,17 @@ struct StackWrapper : public Stack<T>
 template <typename T>
 struct QueueWrapper : public Queue<T>
 {
-    void add(T _value)
+    void add(T _value, size_t _index)
     {
+        (void)_index;
         this->enqueue(_value);
+    }
+
+    T& operator[](size_t _index)
+    {
+        (void)_index;
+        static int i = this->dequeue();
+        return i;
     }
 
     T get(size_t _index)
@@ -223,10 +240,18 @@ struct QueueWrapper : public Queue<T>
 template <typename T, typename P>
 struct PriorityQueueWrapper : public PriorityQueue<T, P>
 {
-    void add(T _value)
+    void add(T _value, size_t _index)
     {
+        (void)_index;
         P priority(0);
         this->enqueue(_value, priority);
+    }
+
+    T& operator[](size_t _index)
+    {
+        (void)_index;
+        static int i = this->dequeue();
+        return i;
     }
 
     T get(size_t _index)
@@ -247,6 +272,7 @@ struct StdVectorWrapper : public vector<T>
         this->emplace(this->begin() + _index, _value);
     }
 
+
     T get(size_t _index)
     {
         return vector<T>::at(_index);
@@ -261,9 +287,16 @@ struct StdVectorWrapper : public vector<T>
 template <typename T>
 struct StdQueueWrapper : public queue<T>
 {
-    void add(T _value)
+    void add(T _value, size_t _index)
     {
+        (void)_index;
         queue<T>::push(_value);
+    }
+
+    T& operator[](size_t _index)
+    {
+        (void)_index;
+        return this->front();
     }
 
     T get(size_t _index)
@@ -280,9 +313,16 @@ struct StdQueueWrapper : public queue<T>
 template <typename T>
 struct StdStackWrapper : public stack<T>
 {
-    void add(T _value)
+    void add(T _value, size_t _index)
     {
+        (void)_index;
         stack<T>::push(_value);
+    }
+
+    T& operator[](size_t _index)
+    {
+        (void)_index;
+        return this->top();
     }
 
     T get(size_t _index)
@@ -296,138 +336,78 @@ struct StdStackWrapper : public stack<T>
     void remove(size_t _index) {(void)_index;}
 };
 
-//int main ()
-//{
-//    //VectorArray<int> va;
-//    //MatrixArray<int> va;
-//    //SingleArray<int> va;
-//    //SpaceArray<int> va;
-
-////    for (int ix = 0; ix < 20; ++ix)
-////    {
-////        va.add(ix, va.size());
-////    }
-////    va.print();
-////    cout << " elements count = " << va.size() << endl;
-
-//    //vector<int> v;
-//    //for (int ix = 0; ix < 10; ++ix)
-//    //{
-//    //    v.emplace(v.begin() + v.size(), ix);
-//    //}
-//    //
-//    //for (int ix = 0; ix < v.size(); ++ix)
-//    //{
-//    //    cout << v[ix] << endl;
-//    //}
-
-//    //cout << va.get(va.size() - 1 ) << endl;
-
-//    //while (va.size())
-//    //{
-//    //    va.remove(0);
-//    //    va.print();
-//    //    cout << endl;
-//    //}
-
-//    //va.print();
-//    //cout << " elements count = " << va.size() << endl;
-
-//    return 0;
-//}
-
 int main()
 {
-    int count_of_elements = 100000;
+    int count_of_elements = 1000000;
+    int elements_to_remove = 100000;
+    int elements_to_get = 100000;
 
     test<VectorArray<int>, int, int, double>(static_cast<const char*>("VectorArray<int>(10, 0.2)"),
-                                             static_cast<const char*>("D:/vector_array_10_02.txt"),
-                                             count_of_elements, 10000, 10000, 10, 0.2);
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - -
+                                             static_cast<const char*>("vector_array_10_02.txt"),
+                                             count_of_elements, elements_to_remove, elements_to_get, 10, 0.2);
 
     test<VectorArray<int>, int, int, double>(static_cast<const char*>("VectorArray<int>(10, 1.0)"),
-                                             static_cast<const char*>("D:/vector_array_10_10.txt"),
-                                             count_of_elements, 10000, 10000, 10, 1.0);
+                                             static_cast<const char*>("vector_array_10_10.txt"),
+                                             count_of_elements, elements_to_remove, elements_to_get, 10, 1.0);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     test<StdVectorWrapper<int>, int>(static_cast<const char*>("StdVectorWrapper<int>"),
-                                     static_cast<const char*>("D:/std_vector.txt"),
-                                     count_of_elements, 10000, 10000);
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-    test<SingleArray<int>, int>(static_cast<const char*>("SingleArray<int>"),
-                                static_cast<const char*>("D:/single_array.txt"),
-                                count_of_elements, 10000, 10000);
+                                     static_cast<const char*>("std_vector.txt"),
+                                     count_of_elements, elements_to_remove, elements_to_get);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     test<MatrixArray<int>, int, int>(static_cast<const char*>("MatrixArray<int>(100)"),
-                                     static_cast<const char*>("D:/single_array.txt"),
-                                     count_of_elements, 10000, 10000, 100);
-
-    // - - - - - - - - - - - - - - - - - - - - - - - - - -
+                                     static_cast<const char*>("matrix_array_100.txt"),
+                                     count_of_elements, elements_to_remove, elements_to_get, 100);
 
     test<MatrixArray<int>, int, int>(static_cast<const char*>("MatrixArray<int>(1000)"),
-                                     static_cast<const char*>("D:/single_array.txt"),
-                                     count_of_elements, 10000, 10000, 1000);
+                                     static_cast<const char*>("matrix_array_1000.txt"),
+                                     count_of_elements, elements_to_remove, elements_to_get, 1000);
+
+    test<MatrixArray<int>, int, int>(static_cast<const char*>("MatrixArray<int>(10000)"),
+                                     static_cast<const char*>("matrix_array_10000.txt"),
+                                     count_of_elements, elements_to_remove, elements_to_get, 10000);
 
     // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    test<MatrixArray<int>, int, int>(static_cast<const char*>("MatrixArray<int>(10000)"),
-                                     static_cast<const char*>("D:/single_array.txt"),
-                                     count_of_elements, 10000, 10000, 10000);
+    test<SpaceArray<int>, int, int>(static_cast<const char*>("SpaceArray<int>(100)"),
+                                    static_cast<const char*>("space_array_100.txt"),
+                                    count_of_elements, elements_to_remove, elements_to_get, 100);
 
-//    //---------------------------
-//    {
-//        {
-//            SpaceArray<int> spa_size_100(100);
-//            test<SpaceArray<int>, int>(spa_size_100, count_of_elements, static_cast<const char*>("SpaceArray<int>(100)"));
-//        }
-//        {
-//            SpaceArray<int> spa_size_1000(1000);
-//            test<SpaceArray<int>, int>(spa_size_1000, count_of_elements, static_cast<const char*>("SpaceArray<int>(1000)"));
-//        }
-//        {
-//            SpaceArray<int> spa_size_10000(10000);
-//            test<SpaceArray<int>, int>(spa_size_10000, count_of_elements, static_cast<const char*>("SpaceArray<int>(10000)"));
-//        }
-//    }
-//    //---------------------------
+    test<SpaceArray<int>, int, int>(static_cast<const char*>("SpaceArray<int>(1000)"),
+                                    static_cast<const char*>("space_array_1000.txt"),
+                                    count_of_elements, elements_to_remove, elements_to_get, 1000);
 
+    test<SpaceArray<int>, int, int>(static_cast<const char*>("SpaceArray<int>(10000)"),
+                                    static_cast<const char*>("space_array_10000.txt"),
+                                    count_of_elements, elements_to_remove, elements_to_get, 10000);
 
-//    //---------------------------
-//    {
-//        StackWrapper<int> stack;
-//        test<StackWrapper<int>, int>(stack, count_of_elements, static_cast<const char*>("StackWrapper<int>"));
-//    }
-//    //---------------------------
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    test<StackWrapper<int>, int>(static_cast<const char*>("StackWrapper<int>"),
+                                 static_cast<const char*>("stack_wrapper.txt"),
+                                 count_of_elements, elements_to_remove, elements_to_get);
 
-//    //---------------------------
-//    {
-//        StdStackWrapper<int> std_stack;
-//        test<StdStackWrapper<int>, int>(std_stack, count_of_elements, static_cast<const char*>("StdStackWrapper<int>"));
-//    }
-//    //---------------------------
+    test<StdStackWrapper<int>, int>(static_cast<const char*>("StdStackWrapper<int>"),
+                                 static_cast<const char*>("std_stack_wrapper.txt"),
+                                 count_of_elements, elements_to_remove, elements_to_get);
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    test<QueueWrapper<int>, int>(static_cast<const char*>("QueueWrapper<int>"),
+                                 static_cast<const char*>("queue_wrapper.txt"),
+                                 count_of_elements, elements_to_remove, elements_to_get);
 
-//    //---------------------------
-//    {
-//        QueueWrapper<int> queue;
-//        test<QueueWrapper<int>, int>(queue, count_of_elements, static_cast<const char*>("QueueWrapper<int>"));
-//    }
-//    //---------------------------
+    test<StdQueueWrapper<int>, int>(static_cast<const char*>("StdQueueWrapper<int>"),
+                                    static_cast<const char*>("std_queue_wrapper.txt"),
+                                    count_of_elements, elements_to_remove, elements_to_get);
 
+    // - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-//    //---------------------------
-//    {
-//        StdQueueWrapper<int> std_queue;
-//        test<StdQueueWrapper<int>, int>(std_queue, count_of_elements, static_cast<const char*>("StdQueueWrapper<int>"));
-//    }
-//    //---------------------------
+    test<SingleArray<int>, int>(static_cast<const char*>("SingleArray<int>"),
+                                static_cast<const char*>("single_array.txt"),
+                                count_of_elements, elements_to_remove, elements_to_get);
 
     return 0;
 }
